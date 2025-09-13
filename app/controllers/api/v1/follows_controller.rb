@@ -64,9 +64,9 @@ class Api::V1::FollowsController < Api::BaseController
 
   def sleep_records
     # Get pagination parameters
-    page = [params[:page].to_i, 1].max
+    page = [ params[:page].to_i, 1 ].max
     limit = (params[:limit].present? && params[:limit].to_i > 0) ? params[:limit].to_i : 25
-    limit = [limit, 100].min # Cap limit at 100
+    limit = [ limit, 100 ].min # Cap limit at 100
     offset = (page - 1) * limit
 
     # Get IDs of users that current user follows

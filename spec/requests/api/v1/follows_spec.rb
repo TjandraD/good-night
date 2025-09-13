@@ -338,33 +338,33 @@ RSpec.describe 'Api::V1::Follows', type: :request do
     context 'when user follows others with sleep records' do
       let!(:follow1) { create(:follow, follower: current_user, followed: user1) }
       let!(:follow2) { create(:follow, follower: current_user, followed: user2) }
-      
+
       let!(:sleep_record1) do
-        create(:sleep_record, 
-               user: user1, 
-               bed_time: 3.days.ago, 
+        create(:sleep_record,
+               user: user1,
+               bed_time: 3.days.ago,
                wakeup_time: 3.days.ago + 8.hours)
       end
-      
+
       let!(:sleep_record2) do
-        create(:sleep_record, 
-               user: user2, 
-               bed_time: 2.days.ago, 
+        create(:sleep_record,
+               user: user2,
+               bed_time: 2.days.ago,
                wakeup_time: 2.days.ago + 7.hours)
       end
-      
+
       let!(:sleep_record3) do
-        create(:sleep_record, 
-               user: user1, 
-               bed_time: 1.day.ago, 
+        create(:sleep_record,
+               user: user1,
+               bed_time: 1.day.ago,
                wakeup_time: 1.day.ago + 9.hours)
       end
-      
+
       # User3 not followed by current_user
       let!(:sleep_record_unfollowed) do
-        create(:sleep_record, 
-               user: user3, 
-               bed_time: 4.days.ago, 
+        create(:sleep_record,
+               user: user3,
+               bed_time: 4.days.ago,
                wakeup_time: 4.days.ago + 6.hours)
       end
 
@@ -412,8 +412,8 @@ RSpec.describe 'Api::V1::Follows', type: :request do
       end
 
       it 'handles pagination correctly' do
-        get '/api/v1/follows/sleep_records', 
-            params: { user_id: current_user.id, page: 2, limit: 2 }, 
+        get '/api/v1/follows/sleep_records',
+            params: { user_id: current_user.id, page: 2, limit: 2 },
             headers: headers
 
         expect(response).to have_http_status(:ok)
@@ -432,9 +432,9 @@ RSpec.describe 'Api::V1::Follows', type: :request do
 
       it 'handles sleeping records (no wakeup_time) correctly' do
         # Create a sleeping record
-        sleeping_record = create(:sleep_record, 
-                                user: user1, 
-                                bed_time: Time.current, 
+        sleeping_record = create(:sleep_record,
+                                user: user1,
+                                bed_time: Time.current,
                                 wakeup_time: nil)
 
         get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
@@ -453,8 +453,8 @@ RSpec.describe 'Api::V1::Follows', type: :request do
       end
 
       it 'caps limit at 100 and uses defaults for invalid parameters' do
-        get '/api/v1/follows/sleep_records', 
-            params: { user_id: current_user.id, page: -1, limit: 150 }, 
+        get '/api/v1/follows/sleep_records',
+            params: { user_id: current_user.id, page: -1, limit: 150 },
             headers: headers
 
         expect(response).to have_http_status(:ok)
@@ -485,31 +485,31 @@ RSpec.describe 'Api::V1::Follows', type: :request do
     context 'integration test with complete follow and sleep tracking flow' do
       it 'handles the complete flow from following to viewing sleep records' do
         # Step 1: Follow user1 and user2
-        post '/api/v1/follows', 
-             params: { user_id: current_user.id, followed_id: user1.id }.to_json, 
+        post '/api/v1/follows',
+             params: { user_id: current_user.id, followed_id: user1.id }.to_json,
              headers: headers
         expect(response).to have_http_status(:created)
 
-        post '/api/v1/follows', 
-             params: { user_id: current_user.id, followed_id: user2.id }.to_json, 
+        post '/api/v1/follows',
+             params: { user_id: current_user.id, followed_id: user2.id }.to_json,
              headers: headers
         expect(response).to have_http_status(:created)
 
         # Step 2: Create sleep records for followed users
-        sleep_record1 = create(:sleep_record, 
-                              user: user1, 
-                              bed_time: 1.day.ago, 
+        sleep_record1 = create(:sleep_record,
+                              user: user1,
+                              bed_time: 1.day.ago,
                               wakeup_time: 1.day.ago + 8.hours)
-        
-        sleep_record2 = create(:sleep_record, 
-                              user: user2, 
-                              bed_time: 2.hours.ago, 
+
+        sleep_record2 = create(:sleep_record,
+                              user: user2,
+                              bed_time: 2.hours.ago,
                               wakeup_time: nil) # Currently sleeping
 
         # Create a sleep record for non-followed user (should not appear)
-        create(:sleep_record, 
-               user: user3, 
-               bed_time: 3.hours.ago, 
+        create(:sleep_record,
+               user: user3,
+               bed_time: 3.hours.ago,
                wakeup_time: 2.hours.ago)
 
         # Step 3: Fetch sleep records
@@ -519,17 +519,17 @@ RSpec.describe 'Api::V1::Follows', type: :request do
         response_body = JSON.parse(response.body)
 
         expect(response_body['sleep_records'].length).to eq(2)
-        
+
         # Most recent should be first (user2's sleeping record)
         expect(response_body['sleep_records'][0]['user_id']).to eq(user2.id)
         expect(response_body['sleep_records'][0]['sleeping']).to eq(true)
-        
+
         expect(response_body['sleep_records'][1]['user_id']).to eq(user1.id)
         expect(response_body['sleep_records'][1]['sleeping']).to eq(false)
 
         # Step 4: Unfollow user2
-        delete '/api/v1/follows', 
-               params: { user_id: current_user.id, followed_id: user2.id }.to_json, 
+        delete '/api/v1/follows',
+               params: { user_id: current_user.id, followed_id: user2.id }.to_json,
                headers: headers
         expect(response).to have_http_status(:ok)
 

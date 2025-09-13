@@ -221,10 +221,10 @@ RSpec.describe Api::V1::FollowsController, type: :controller do
     context 'when user exists but follows no one' do
       it 'returns empty sleep records with pagination' do
         get :sleep_records, params: { user_id: current_user.id }
-        
+
         expect(response).to have_http_status(:ok)
         response_body = JSON.parse(response.body)
-        
+
         expect(response_body['message']).to eq('No sleep records found')
         expect(response_body['sleep_records']).to eq([])
         expect(response_body['pagination']).to include(
@@ -245,22 +245,22 @@ RSpec.describe Api::V1::FollowsController, type: :controller do
 
       it 'returns sleep records from followed users only, ordered by bed_time desc' do
         get :sleep_records, params: { user_id: current_user.id }
-        
+
         expect(response).to have_http_status(:ok)
         response_body = JSON.parse(response.body)
-        
+
         expect(response_body['message']).to eq('Sleep records retrieved successfully')
         expect(response_body['sleep_records'].length).to eq(2)
-        
+
         # Check ordering (most recent bed_time first)
         sleep_records = response_body['sleep_records']
         expect(sleep_records[0]['user_id']).to eq(user2.id)
         expect(sleep_records[1]['user_id']).to eq(user1.id)
-        
+
         # Check that user3's sleep record is not included
         user_ids = sleep_records.map { |sr| sr['user_id'] }
         expect(user_ids).not_to include(user3.id)
-        
+
         # Check sleep record structure
         first_record = sleep_records[0]
         expect(first_record).to include(
@@ -272,7 +272,7 @@ RSpec.describe Api::V1::FollowsController, type: :controller do
           'duration_in_hours' => sleep_record2.duration_in_hours,
           'sleeping' => false
         )
-        
+
         # Check pagination
         expect(response_body['pagination']).to include(
           'current_page' => 1,
@@ -284,16 +284,16 @@ RSpec.describe Api::V1::FollowsController, type: :controller do
 
       it 'handles pagination correctly' do
         # Ensure we have exactly 2 records for this test
-        expect(SleepRecord.where(user_id: [user1.id, user2.id]).count).to eq(2)
-        
+        expect(SleepRecord.where(user_id: [ user1.id, user2.id ]).count).to eq(2)
+
         get :sleep_records, params: { user_id: current_user.id, page: 2, limit: 1 }
-        
+
         expect(response).to have_http_status(:ok)
         response_body = JSON.parse(response.body)
-        
+
         expect(response_body['sleep_records'].length).to eq(1)
         expect(response_body['sleep_records'][0]['user_id']).to eq(user1.id)
-        
+
         expect(response_body['pagination']).to include(
           'current_page' => 2,
           'per_page' => 1,
@@ -304,19 +304,19 @@ RSpec.describe Api::V1::FollowsController, type: :controller do
 
       it 'caps limit at 100' do
         get :sleep_records, params: { user_id: current_user.id, limit: 150 }
-        
+
         expect(response).to have_http_status(:ok)
         response_body = JSON.parse(response.body)
-        
+
         expect(response_body['pagination']['per_page']).to eq(100)
       end
 
       it 'uses default values for invalid pagination parameters' do
         get :sleep_records, params: { user_id: current_user.id, page: -1, limit: 0 }
-        
+
         expect(response).to have_http_status(:ok)
         response_body = JSON.parse(response.body)
-        
+
         expect(response_body['pagination']).to include(
           'current_page' => 1,
           'per_page' => 25
@@ -326,15 +326,15 @@ RSpec.describe Api::V1::FollowsController, type: :controller do
       it 'includes sleeping records correctly' do
         # Create a sleeping record (no wakeup_time)
         sleeping_record = create(:sleep_record, user: user1, bed_time: Time.current, wakeup_time: nil)
-        
+
         get :sleep_records, params: { user_id: current_user.id }
-        
+
         expect(response).to have_http_status(:ok)
         response_body = JSON.parse(response.body)
-        
+
         # Should now have 3 records (2 existing + 1 sleeping)
         expect(response_body['sleep_records'].length).to eq(3)
-        
+
         # The sleeping record should be first (most recent bed_time)
         first_record = response_body['sleep_records'][0]
         expect(first_record['id']).to eq(sleeping_record.id)
