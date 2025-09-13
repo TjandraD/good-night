@@ -1,0 +1,1330 @@
+{
+    "info": {
+        "name": "Good Night API",
+        "description": "A comprehensive Postman collection for testing the Good Night API - a sleep tracking application that allows users to track their sleep patterns and follow other users to see their sleep records.",
+        "version": "1.0.0",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string",
+            "description": "Base URL for the Good Night API"
+        },
+        {
+            "key": "user_id",
+            "value": "1",
+            "type": "string",
+            "description": "User ID for testing (update as needed)"
+        },
+        {
+            "key": "followed_id",
+            "value": "2",
+            "type": "string",
+            "description": "ID of user to follow/unfollow (update as needed)"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health Check",
+            "item": [
+                {
+                    "name": "Get Health Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/up",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "up"
+                            ]
+                        },
+                        "description": "Health check endpoint that returns 200 if the app boots with no exceptions, otherwise 500. Can be used by load balancers and uptime monitors to verify that the app is live."
+                    },
+                    "response": [
+                        {
+                            "name": "Successful Health Check",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/up",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "up"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [],
+                            "body": "OK"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response indicates healthy app', function () {",
+                                    "    pm.expect(pm.response.text()).to.include('OK');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "description": "Health check endpoints for monitoring application status"
+        },
+        {
+            "name": "Sleep Records",
+            "item": [
+                {
+                    "name": "Create Sleep Record (Going to Bed)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": {{user_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/sleep_records",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "sleep_records"
+                            ]
+                        },
+                        "description": "Creates a new sleep record if the user has no ongoing sleep session. Sets bed_time to current timestamp. If the user already has an incomplete sleep record, it will update that record with wakeup_time instead."
+                    },
+                    "response": [
+                        {
+                            "name": "Sleep Record Created (201)",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/sleep_records",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "sleep_records"
+                                    ]
+                                }
+                            },
+                            "status": "Created",
+                            "code": 201,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"message\": \"Sleep record created successfully\",\n  \"sleep_record\": {\n    \"id\": 1,\n    \"user_id\": 1,\n    \"bed_time\": \"2023-12-25T22:00:00Z\",\n    \"wakeup_time\": null,\n    \"duration_in_hours\": null,\n    \"sleeping\": true,\n    \"created_at\": \"2023-12-25T22:00:00Z\",\n    \"updated_at\": \"2023-12-25T22:00:00Z\"\n  }\n}"
+                        },
+                        {
+                            "name": "Wakeup Time Updated (200)",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/sleep_records",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "sleep_records"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"message\": \"Wakeup time updated successfully\",\n  \"sleep_record\": {\n    \"id\": 1,\n    \"user_id\": 1,\n    \"bed_time\": \"2023-12-25T22:00:00Z\",\n    \"wakeup_time\": \"2023-12-26T08:00:00Z\",\n    \"duration_in_hours\": 10.0,\n    \"sleeping\": false,\n    \"created_at\": \"2023-12-25T22:00:00Z\",\n    \"updated_at\": \"2023-12-26T08:00:00Z\"\n  }\n}"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 or 201', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has message and sleep_record', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('message');",
+                                    "    pm.expect(jsonData).to.have.property('sleep_record');",
+                                    "});",
+                                    "",
+                                    "pm.test('Sleep record has required fields', function () {",
+                                    "    const sleepRecord = pm.response.json().sleep_record;",
+                                    "    pm.expect(sleepRecord).to.have.property('id');",
+                                    "    pm.expect(sleepRecord).to.have.property('user_id');",
+                                    "    pm.expect(sleepRecord).to.have.property('bed_time');",
+                                    "    pm.expect(sleepRecord).to.have.property('sleeping');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Sleep Record - User Not Found (401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": 999999\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/sleep_records",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "sleep_records"
+                            ]
+                        },
+                        "description": "Test case for when trying to create a sleep record for a non-existent user."
+                    },
+                    "response": [
+                        {
+                            "name": "User Not Found Error",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 999999\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/sleep_records",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "sleep_records"
+                                    ]
+                                }
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"error\": \"User not found\",\n  \"message\": \"Please provide a valid user_id parameter\"\n}"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 401', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'User not found');",
+                                    "    pm.expect(jsonData).to.have.property('message');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Sleep Record - Missing User ID (401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/sleep_records",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "sleep_records"
+                            ]
+                        },
+                        "description": "Test case for when user_id is not provided in the request."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 401', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message about user_id', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'User not found');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "description": "Endpoints for managing user sleep records"
+        },
+        {
+            "name": "Follows",
+            "item": [
+                {
+                    "name": "Follow User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": {{user_id}},\n  \"followed_id\": {{followed_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows"
+                            ]
+                        },
+                        "description": "Creates a new follow relationship between the current user and another user. Users cannot follow themselves or follow the same user multiple times."
+                    },
+                    "response": [
+                        {
+                            "name": "Successfully Followed User (201)",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 1,\n  \"followed_id\": 2\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows"
+                                    ]
+                                }
+                            },
+                            "status": "Created",
+                            "code": 201,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"message\": \"Successfully followed user\",\n  \"follow\": {\n    \"id\": 1,\n    \"follower_id\": 1,\n    \"followed_id\": 2,\n    \"follower_name\": \"John Doe\",\n    \"followed_name\": \"Jane Smith\",\n    \"created_at\": \"2023-12-25T22:00:00Z\",\n    \"updated_at\": \"2023-12-25T22:00:00Z\"\n  }\n}"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has message and follow object', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('message', 'Successfully followed user');",
+                                    "    pm.expect(jsonData).to.have.property('follow');",
+                                    "});",
+                                    "",
+                                    "pm.test('Follow object has required fields', function () {",
+                                    "    const follow = pm.response.json().follow;",
+                                    "    pm.expect(follow).to.have.property('id');",
+                                    "    pm.expect(follow).to.have.property('follower_id');",
+                                    "    pm.expect(follow).to.have.property('followed_id');",
+                                    "    pm.expect(follow).to.have.property('follower_name');",
+                                    "    pm.expect(follow).to.have.property('followed_name');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Follow User - User Not Found (401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": 999999,\n  \"followed_id\": {{followed_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows"
+                            ]
+                        },
+                        "description": "Test case for when the follower user doesn't exist."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 401', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'User not found');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Follow User - Followed User Not Found (404)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": {{user_id}},\n  \"followed_id\": 999999\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows"
+                            ]
+                        },
+                        "description": "Test case for when the user to be followed doesn't exist."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 404', function () {",
+                                    "    pm.response.to.have.status(404);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'User not found');",
+                                    "    pm.expect(jsonData).to.have.property('message', 'The user you want to follow does not exist');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Follow User - Self Follow (422)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": {{user_id}},\n  \"followed_id\": {{user_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows"
+                            ]
+                        },
+                        "description": "Test case for when a user tries to follow themselves (should fail)."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 422', function () {",
+                                    "    pm.response.to.have.status(422);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'Unable to follow user');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Unfollow User",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": {{user_id}},\n  \"followed_id\": {{followed_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows"
+                            ]
+                        },
+                        "description": "Removes an existing follow relationship between the current user and another user. The follow relationship must exist before it can be deleted."
+                    },
+                    "response": [
+                        {
+                            "name": "Successfully Unfollowed User (200)",
+                            "originalRequest": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 1,\n  \"followed_id\": 2\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"message\": \"Successfully unfollowed user\",\n  \"follow\": {\n    \"id\": 1,\n    \"follower_id\": 1,\n    \"followed_id\": 2,\n    \"follower_name\": \"John Doe\",\n    \"followed_name\": \"Jane Smith\",\n    \"created_at\": \"2023-12-25T22:00:00Z\",\n    \"updated_at\": \"2023-12-25T22:00:00Z\"\n  }\n}"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has message and follow object', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('message', 'Successfully unfollowed user');",
+                                    "    pm.expect(jsonData).to.have.property('follow');",
+                                    "});",
+                                    "",
+                                    "pm.test('Follow object has required fields', function () {",
+                                    "    const follow = pm.response.json().follow;",
+                                    "    pm.expect(follow).to.have.property('id');",
+                                    "    pm.expect(follow).to.have.property('follower_id');",
+                                    "    pm.expect(follow).to.have.property('followed_id');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Unfollow User - Follow Not Found (404)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": {{user_id}},\n  \"followed_id\": {{followed_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows"
+                            ]
+                        },
+                        "description": "Test case for when trying to unfollow a user that is not being followed."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 404', function () {",
+                                    "    pm.response.to.have.status(404);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'Follow relationship not found');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Followed Users Sleep Records",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id={{user_id}}&page=1&limit=25",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows",
+                                "sleep_records"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{user_id}}",
+                                    "description": "The ID of the current user"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page number for pagination (optional)"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "25",
+                                    "description": "Number of records per page (optional, max 100)"
+                                }
+                            ]
+                        },
+                        "description": "Retrieves sleep records of users that the current user follows. Results are ordered by bed_time in descending order (most recent first). Only returns sleep records from users that the current user follows."
+                    },
+                    "response": [
+                        {
+                            "name": "Sleep Records Retrieved Successfully (200)",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id=1&page=1&limit=25",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows",
+                                        "sleep_records"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "user_id",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "page",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "25"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"message\": \"Sleep records retrieved successfully\",\n  \"sleep_records\": [\n    {\n      \"id\": 1,\n      \"user_id\": 2,\n      \"user_name\": \"Jane Smith\",\n      \"bed_time\": \"2023-12-25T22:00:00Z\",\n      \"wakeup_time\": \"2023-12-26T08:00:00Z\",\n      \"duration_in_hours\": 10.0,\n      \"sleeping\": false,\n      \"created_at\": \"2023-12-25T22:00:00Z\",\n      \"updated_at\": \"2023-12-26T08:00:00Z\"\n    }\n  ],\n  \"pagination\": {\n    \"current_page\": 1,\n    \"per_page\": 25,\n    \"total_pages\": 1,\n    \"total_count\": 1\n  }\n}"
+                        },
+                        {
+                            "name": "No Sleep Records Found (200)",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id=1",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows",
+                                        "sleep_records"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "user_id",
+                                            "value": "1"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"message\": \"No sleep records found\",\n  \"sleep_records\": [],\n  \"pagination\": {\n    \"current_page\": 1,\n    \"per_page\": 25,\n    \"total_pages\": 0,\n    \"total_count\": 0\n  }\n}"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has required fields', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('message');",
+                                    "    pm.expect(jsonData).to.have.property('sleep_records');",
+                                    "    pm.expect(jsonData).to.have.property('pagination');",
+                                    "});",
+                                    "",
+                                    "pm.test('Pagination has required fields', function () {",
+                                    "    const pagination = pm.response.json().pagination;",
+                                    "    pm.expect(pagination).to.have.property('current_page');",
+                                    "    pm.expect(pagination).to.have.property('per_page');",
+                                    "    pm.expect(pagination).to.have.property('total_pages');",
+                                    "    pm.expect(pagination).to.have.property('total_count');",
+                                    "});",
+                                    "",
+                                    "pm.test('Sleep records array is valid', function () {",
+                                    "    const sleepRecords = pm.response.json().sleep_records;",
+                                    "    pm.expect(sleepRecords).to.be.an('array');",
+                                    "    ",
+                                    "    if (sleepRecords.length > 0) {",
+                                    "        const firstRecord = sleepRecords[0];",
+                                    "        pm.expect(firstRecord).to.have.property('id');",
+                                    "        pm.expect(firstRecord).to.have.property('user_id');",
+                                    "        pm.expect(firstRecord).to.have.property('user_name');",
+                                    "        pm.expect(firstRecord).to.have.property('bed_time');",
+                                    "        pm.expect(firstRecord).to.have.property('sleeping');",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Followed Users Sleep Records - User Not Found (401)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id=999999",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows",
+                                "sleep_records"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "999999",
+                                    "description": "Non-existent user ID"
+                                }
+                            ]
+                        },
+                        "description": "Test case for when the user doesn't exist."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 401', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'User not found');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Followed Users Sleep Records - Missing User ID (401)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows/sleep_records",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows",
+                                "sleep_records"
+                            ]
+                        },
+                        "description": "Test case for when user_id parameter is not provided."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 401', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error', 'User not found');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Followed Users Sleep Records - With Pagination",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id={{user_id}}&page=2&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "follows",
+                                "sleep_records"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{user_id}}",
+                                    "description": "The ID of the current user"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "2",
+                                    "description": "Second page of results"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10",
+                                    "description": "10 records per page"
+                                }
+                            ]
+                        },
+                        "description": "Test pagination functionality with custom page and limit parameters."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Pagination reflects request parameters', function () {",
+                                    "    const pagination = pm.response.json().pagination;",
+                                    "    pm.expect(pagination.current_page).to.equal(2);",
+                                    "    pm.expect(pagination.per_page).to.equal(10);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "description": "Endpoints for managing user follow relationships and viewing followed users' sleep records"
+        },
+        {
+            "name": "Test Scenarios",
+            "item": [
+                {
+                    "name": "Complete User Flow",
+                    "item": [
+                        {
+                            "name": "1. Create User 1 Sleep Record",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/sleep_records",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "sleep_records"
+                                    ]
+                                },
+                                "description": "Step 1: Create a sleep record for User 1 (going to bed)"
+                            }
+                        },
+                        {
+                            "name": "2. User 3 Follows User 1",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 3,\n  \"followed_id\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows"
+                                    ]
+                                },
+                                "description": "Step 2: User 3 follows User 1"
+                            }
+                        },
+                        {
+                            "name": "3. User 3 Follows User 2",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 3,\n  \"followed_id\": 2\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows"
+                                    ]
+                                },
+                                "description": "Step 3: User 3 follows User 2"
+                            }
+                        },
+                        {
+                            "name": "4. Create User 2 Sleep Record",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 2\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/sleep_records",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "sleep_records"
+                                    ]
+                                },
+                                "description": "Step 4: Create a sleep record for User 2 (going to bed)"
+                            }
+                        },
+                        {
+                            "name": "5. User 3 Views Followed Sleep Records",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id=3",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows",
+                                        "sleep_records"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "user_id",
+                                            "value": "3"
+                                        }
+                                    ]
+                                },
+                                "description": "Step 5: User 3 views sleep records of followed users (should see User 1 and User 2 records)"
+                            }
+                        },
+                        {
+                            "name": "6. Update User 1 Sleep Record (Wake Up)",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/sleep_records",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "sleep_records"
+                                    ]
+                                },
+                                "description": "Step 6: User 1 wakes up (should update existing sleep record with wakeup time)"
+                            }
+                        },
+                        {
+                            "name": "7. User 3 Views Updated Sleep Records",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id=3",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows",
+                                        "sleep_records"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "user_id",
+                                            "value": "3"
+                                        }
+                                    ]
+                                },
+                                "description": "Step 7: User 3 views updated sleep records (User 1's record should now show wakeup time and duration)"
+                            }
+                        },
+                        {
+                            "name": "8. User 3 Unfollows User 1",
+                            "request": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"user_id\": 3,\n  \"followed_id\": 1\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows"
+                                    ]
+                                },
+                                "description": "Step 8: User 3 unfollows User 1"
+                            }
+                        },
+                        {
+                            "name": "9. User 3 Views Final Sleep Records",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/follows/sleep_records?user_id=3",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "follows",
+                                        "sleep_records"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "user_id",
+                                            "value": "3"
+                                        }
+                                    ]
+                                },
+                                "description": "Step 9: User 3 views sleep records after unfollowing User 1 (should only see User 2's records)"
+                            }
+                        }
+                    ],
+                    "description": "A complete workflow testing the main functionality of the API"
+                }
+            ],
+            "description": "Complete test scenarios that demonstrate the full API functionality"
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Set default values if variables are not set",
+                    "if (!pm.collectionVariables.get('base_url')) {",
+                    "    pm.collectionVariables.set('base_url', 'http://localhost:3000');",
+                    "}",
+                    "",
+                    "if (!pm.collectionVariables.get('user_id')) {",
+                    "    pm.collectionVariables.set('user_id', '1');",
+                    "}",
+                    "",
+                    "if (!pm.collectionVariables.get('followed_id')) {",
+                    "    pm.collectionVariables.set('followed_id', '2');",
+                    "}"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global test to check for rate limiting",
+                    "pm.test('No rate limiting encountered', function () {",
+                    "    pm.expect(pm.response.code).to.not.equal(429);",
+                    "});",
+                    "",
+                    "// Global test to ensure response is JSON (where applicable)",
+                    "if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+                    "    pm.test('Response is valid JSON', function () {",
+                    "        pm.expect(() => pm.response.json()).to.not.throw();",
+                    "    });",
+                    "}"
+                ]
+            }
+        }
+    ]
+}

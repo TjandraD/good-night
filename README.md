@@ -119,6 +119,10 @@ docker run -p 3000:3000 good-night
 
 ## 🧪 How to Test
 
+### Postman Collection
+
+A Postman collection is provided in the `docs` folder to test the API endpoints.
+
 ### Running the Test Suite
 
 This project uses RSpec for testing. Run the complete test suite:
