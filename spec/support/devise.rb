@@ -15,7 +15,7 @@ end
 
 # Helper method to authenticate users in tests
 def authenticate_user(user, password = 'password123')
-  credentials = Base64.encode64("#{user.email}:#{password}")
+  credentials = Base64.strict_encode64("#{user.email}:#{password}")
   { 'Authorization' => "Basic #{credentials}" }
 end
 

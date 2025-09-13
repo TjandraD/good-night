@@ -30,7 +30,7 @@ RSpec.describe HealthController, type: :controller do
 
     context 'when user is authenticated with valid credentials' do
       before do
-        credentials = Base64.encode64("#{user.email}:password123")
+        credentials = Base64.strict_encode64("#{user.email}:password123")
         request.headers['Authorization'] = "Basic #{credentials}"
       end
 
@@ -47,7 +47,7 @@ RSpec.describe HealthController, type: :controller do
 
     context 'when user is authenticated with invalid credentials' do
       before do
-        credentials = Base64.encode64("#{user.email}:wrongpassword")
+        credentials = Base64.strict_encode64("#{user.email}:wrongpassword")
         request.headers['Authorization'] = "Basic #{credentials}"
       end
 

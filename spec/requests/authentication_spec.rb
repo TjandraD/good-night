@@ -13,7 +13,7 @@ RSpec.describe 'Authentication API', type: :request do
   describe 'GET /test_auth' do
     context 'when user is authenticated with valid credentials' do
       let(:headers) do
-        credentials = Base64.encode64("#{user.email}:password123")
+        credentials = Base64.strict_encode64("#{user.email}:password123")
         { 'Authorization' => "Basic #{credentials}" }
       end
 
@@ -40,7 +40,7 @@ RSpec.describe 'Authentication API', type: :request do
 
     context 'when user provides invalid credentials' do
       let(:headers) do
-        credentials = Base64.encode64("#{user.email}:wrongpassword")
+        credentials = Base64.strict_encode64("#{user.email}:wrongpassword")
         { 'Authorization' => "Basic #{credentials}" }
       end
 
@@ -53,7 +53,7 @@ RSpec.describe 'Authentication API', type: :request do
 
     context 'when user email does not exist' do
       let(:headers) do
-        credentials = Base64.encode64("nonexistent@example.com:password123")
+        credentials = Base64.strict_encode64("nonexistent@example.com:password123")
         { 'Authorization' => "Basic #{credentials}" }
       end
 
