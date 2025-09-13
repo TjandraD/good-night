@@ -15,7 +15,7 @@ RSpec.describe Follow, type: :model do
 
     context 'uniqueness validation' do
       before { create(:follow, follower: user1, followed: user2) }
-      
+
       it 'prevents duplicate follows' do
         duplicate_follow = build(:follow, follower: user1, followed: user2)
         expect(duplicate_follow).not_to be_valid

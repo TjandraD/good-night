@@ -3,11 +3,11 @@ class Api::V1::FollowsController < Api::BaseController
 
   def create
     followed_user = User.find_by(id: params[:followed_id])
-    
+
     unless followed_user
-      render json: { 
-        error: "User not found", 
-        message: "The user you want to follow does not exist" 
+      render json: {
+        error: "User not found",
+        message: "The user you want to follow does not exist"
       }, status: :not_found
       return
     end
