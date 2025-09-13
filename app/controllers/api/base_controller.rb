@@ -1,7 +1,7 @@
 class Api::BaseController < ApplicationController
   # Common functionality for all API controllers
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
-  rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
+  rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_content
 
   private
 
@@ -10,7 +10,7 @@ class Api::BaseController < ApplicationController
   end
 
   def unprocessable_entity(exception)
-    render json: { error: "Validation failed", message: exception.message }, status: :unprocessable_entity
+    render json: { error: "Validation failed", message: exception.message }, status: :unprocessable_content
   end
 
   def current_user
