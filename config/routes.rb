@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       post "sleep_records", to: "sleep_records#create"
+      post "follows", to: "follows#create"
     end
   end
 
