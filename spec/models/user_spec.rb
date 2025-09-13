@@ -74,55 +74,5 @@ RSpec.describe User, type: :model do
         expect(user2.followers).to contain_exactly(user1)
       end
     end
-
-    describe '#unfollow' do
-      context 'when follow relationship exists' do
-        before { user1.follow(user2) }
-
-        it 'removes the follow relationship' do
-          expect {
-            user1.unfollow(user2)
-          }.to change(Follow, :count).by(-1)
-
-          expect(user1.following?(user2)).to be false
-          expect(user2.followers).not_to include(user1)
-        end
-
-        it 'returns the destroyed follow object' do
-          follow = user1.active_follows.find_by(followed: user2)
-          result = user1.unfollow(user2)
-          expect(result).to eq(follow)
-        end
-      end
-
-      context 'when follow relationship does not exist' do
-        it 'returns nil and does not change follow count' do
-          expect {
-            result = user1.unfollow(user2)
-            expect(result).to be_nil
-          }.not_to change(Follow, :count)
-
-          expect(user1.following?(user2)).to be false
-        end
-      end
-
-      context 'with multiple follow relationships' do
-        before do
-          user1.follow(user2)
-          user1.follow(user3)
-          user3.follow(user1)
-        end
-
-        it 'only removes the specific follow relationship' do
-          expect {
-            user1.unfollow(user2)
-          }.to change(Follow, :count).by(-1)
-
-          expect(user1.following?(user2)).to be false
-          expect(user1.following?(user3)).to be true
-          expect(user3.following?(user1)).to be true
-        end
-      end
-    end
   end
 end

@@ -20,9 +20,4 @@ class User < ApplicationRecord
   def follow(other_user)
     active_follows.create(followed: other_user)
   end
-
-  def unfollow(other_user)
-    follow_relationship = active_follows.find_by(followed: other_user)
-    follow_relationship&.destroy
-  end
 end
