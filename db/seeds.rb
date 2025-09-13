@@ -12,7 +12,7 @@ if File.exist?(environment_seed_file)
   load environment_seed_file
 else
   puts "No environment-specific seed file found, loading default seeds..."
-  
+
   # Default seeds (massive dataset) - same as before
   require 'faker'
 
@@ -43,7 +43,7 @@ else
   # Process users in batches
   (0...USERS_COUNT).each_slice(BATCH_SIZE) do |batch_range|
     users_batch = []
-    
+
     batch_range.each do |index|
       users_batch << {
         name: Faker::Name.name,
@@ -51,12 +51,12 @@ else
         updated_at: Time.current
       }
     end
-    
+
     # Use insert_all for bulk insert (Rails 6+)
     User.insert_all(users_batch)
-    
+
     puts "Inserted batch #{batch_range.first / BATCH_SIZE + 1} of #{(USERS_COUNT.to_f / BATCH_SIZE).ceil} for users"
-    
+
     # Force garbage collection every few batches to manage memory
     GC.start if (batch_range.first / BATCH_SIZE + 1) % 10 == 0
   end
@@ -75,19 +75,19 @@ else
 
   (0...SLEEP_RECORDS_COUNT).each_slice(BATCH_SIZE) do |batch_range|
     sleep_records_batch = []
-    
+
     batch_range.each do |index|
       user_id = user_ids.sample
-      
+
       # Generate realistic sleep patterns
       bed_time = Faker::Time.between(from: 30.days.ago, to: Time.current)
       # Adjust bed time to be realistic (between 9 PM and 2 AM)
       bed_time = bed_time.change(hour: rand(21..26) % 24, min: rand(0..59))
-      
+
       # Wake up time should be 6-10 hours after bed time
       sleep_duration_hours = rand(6.0..10.0)
       wakeup_time = bed_time + sleep_duration_hours.hours
-      
+
       sleep_records_batch << {
         user_id: user_id,
         bed_time: bed_time,
@@ -96,11 +96,11 @@ else
         updated_at: Time.current
       }
     end
-    
+
     SleepRecord.insert_all(sleep_records_batch)
-    
+
     puts "Inserted batch #{batch_range.first / BATCH_SIZE + 1} of #{(SLEEP_RECORDS_COUNT.to_f / BATCH_SIZE).ceil} for sleep records"
-    
+
     # Force garbage collection every few batches
     GC.start if (batch_range.first / BATCH_SIZE + 1) % 10 == 0
   end
@@ -117,20 +117,20 @@ else
 
   (0...FOLLOWS_COUNT).each_slice(BATCH_SIZE) do |batch_range|
     follows_batch = []
-    
+
     batch_range.each do |index|
       # Keep trying until we get a unique follow relationship
       max_attempts = 50
       attempts = 0
-      
+
       while attempts < max_attempts
         follower_id = user_ids.sample
         followed_id = user_ids.sample
-        
+
         # Ensure users don't follow themselves and relationship is unique
-        if follower_id != followed_id && !existing_follows.include?([follower_id, followed_id])
-          existing_follows.add([follower_id, followed_id])
-          
+        if follower_id != followed_id && !existing_follows.include?([ follower_id, followed_id ])
+          existing_follows.add([ follower_id, followed_id ])
+
           follows_batch << {
             follower_id: follower_id,
             followed_id: followed_id,
@@ -139,16 +139,16 @@ else
           }
           break
         end
-        
+
         attempts += 1
       end
-      
+
       # If we can't find a unique relationship after max attempts, skip this one
       if attempts >= max_attempts
         puts "Warning: Skipped creating follow relationship after #{max_attempts} attempts"
       end
     end
-    
+
     # Only insert if we have records in the batch
     if follows_batch.any?
       begin
@@ -165,9 +165,9 @@ else
         end
       end
     end
-    
+
     puts "Inserted batch #{batch_range.first / BATCH_SIZE + 1} of #{(FOLLOWS_COUNT.to_f / BATCH_SIZE).ceil} for follows"
-    
+
     # Force garbage collection and clear some memory every few batches
     if (batch_range.first / BATCH_SIZE + 1) % 5 == 0
       existing_follows.clear if existing_follows.size > 100_000 # Clear the set periodically to manage memory

@@ -28,7 +28,7 @@ user_ids.each do |user_id|
   2.times do |i|
     bed_time = (i + 1).days.ago.change(hour: 22)
     wakeup_time = bed_time + 8.hours
-    
+
     sleep_records_data << {
       user_id: user_id,
       bed_time: bed_time,

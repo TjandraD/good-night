@@ -36,7 +36,7 @@ if sample_user
   puts "  Sleep Records: #{sample_user.sleep_records.count}"
   puts "  Following: #{sample_user.following.count}"
   puts "  Followers: #{sample_user.followers.count}"
-  
+
   if sample_user.sleep_records.any?
     recent_sleep = sample_user.sleep_records.order(created_at: :desc).first
     duration = ((recent_sleep.wakeup_time - recent_sleep.bed_time) / 1.hour).round(2)
@@ -91,18 +91,18 @@ puts
 if defined?(ActiveRecord::Base.connection.execute)
   begin
     result = ActiveRecord::Base.connection.execute("
-      SELECT 
+      SELECT
         schemaname,
         tablename,
         attname,
         n_distinct,
         correlation
-      FROM pg_stats 
-      WHERE schemaname = 'public' 
+      FROM pg_stats
+      WHERE schemaname = 'public'
         AND tablename IN ('users', 'sleep_records', 'follows')
       ORDER BY tablename, attname
     ")
-    
+
     if result.any?
       puts "📊 Database Statistics (PostgreSQL):"
       current_table = nil

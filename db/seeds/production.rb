@@ -47,13 +47,13 @@ existing = Set.new
 (1..FOLLOWS_COUNT).each do |i|
   max_attempts = 10
   attempts = 0
-  
+
   while attempts < max_attempts
     follower_id = user_ids.sample
     followed_id = user_ids.sample
-    
-    if follower_id != followed_id && !existing.include?([follower_id, followed_id])
-      existing.add([follower_id, followed_id])
+
+    if follower_id != followed_id && !existing.include?([ follower_id, followed_id ])
+      existing.add([ follower_id, followed_id ])
       follows_batch << {
         follower_id: follower_id,
         followed_id: followed_id,
