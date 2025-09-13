@@ -10,6 +10,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "sleep_records", to: "sleep_records#create"
       post "follows", to: "follows#create"
+      delete "follows", to: "follows#destroy"
     end
   end
 
