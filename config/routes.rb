@@ -1,9 +1,9 @@
 Rails.application.routes.draw do
   # Devise routes for authentication
-  devise_for :users, skip: [:sessions] do
+  devise_for :users, skip: [ :sessions ] do
     # Custom API authentication routes
-    post 'users/sign_in', to: 'devise/sessions#create'
-    delete 'users/sign_out', to: 'devise/sessions#destroy'
+    post "users/sign_in", to: "devise/sessions#create"
+    delete "users/sign_out", to: "devise/sessions#destroy"
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

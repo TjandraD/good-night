@@ -21,7 +21,7 @@ RSpec.describe 'Authentication API', type: :request do
         get '/test_auth', headers: headers
 
         expect(response).to have_http_status(:ok)
-        
+
         response_body = JSON.parse(response.body)
         expect(response_body['message']).to eq('Authentication successful!')
         expect(response_body['user']['id']).to eq(user.id)
@@ -68,7 +68,7 @@ RSpec.describe 'Authentication API', type: :request do
   describe 'GET /up (health check)' do
     it 'returns 200 without authentication' do
       get '/up'
-      
+
       expect(response).to have_http_status(:ok)
     end
   end

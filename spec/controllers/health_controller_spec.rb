@@ -5,7 +5,7 @@ RSpec.describe HealthController, type: :controller do
     it 'returns health status without authentication' do
       get :show
       expect(response).to have_http_status(:ok)
-      
+
       response_body = JSON.parse(response.body)
       expect(response_body['status']).to eq('ok')
     end
@@ -37,7 +37,7 @@ RSpec.describe HealthController, type: :controller do
       it 'returns user information' do
         get :test_auth
         expect(response).to have_http_status(:ok)
-        
+
         response_body = JSON.parse(response.body)
         expect(response_body['message']).to eq('Authentication successful!')
         expect(response_body['user']['email']).to eq(user.email)

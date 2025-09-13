@@ -3,15 +3,15 @@ require 'rails_helper'
 RSpec.describe ApplicationController, type: :controller do
   controller(ApplicationController) do
     # Skip authentication for this specific test action
-    skip_before_action :authenticate_user!, only: [:index]
+    skip_before_action :authenticate_user!, only: [ :index ]
 
     def index
       render json: { message: 'Hello World' }
     end
 
     def show
-      render json: { 
-        message: 'Authentication successful!', 
+      render json: {
+        message: 'Authentication successful!',
         user: {
           id: current_user.id,
           name: current_user.name,
@@ -60,7 +60,7 @@ RSpec.describe ApplicationController, type: :controller do
       it 'allows access to protected endpoints' do
         get :show
         expect(response).to have_http_status(:ok)
-        
+
         response_body = JSON.parse(response.body)
         expect(response_body['message']).to eq('Authentication successful!')
         expect(response_body['user']['email']).to eq(user.email)
