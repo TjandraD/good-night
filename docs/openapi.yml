@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: Good Night API
+  description: A sleep tracking API that allows users to track their sleep patterns
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Development server
+paths:
+  /api/v1/sleep_record:
+    post:
+      summary: Create or update sleep record
+      description: |
+        Creates a new sleep record if the user has no ongoing sleep session, or updates 
+        the existing sleep record with a wakeup time if there's an ongoing session.
+        
+        **Business Logic:**
+        - If the user's latest sleep record has no `wakeup_time`, it will be updated with the current timestamp
+        - If the user has no sleep records or the latest one is complete, a new sleep record will be created with `bed_time` set to current timestamp
+      operationId: createOrUpdateSleepRecord
+      tags:
+        - Sleep Records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+              properties:
+                user_id:
+                  type: integer
+                  description: The ID of the user
+                  example: 2
+      responses:
+        '200':
+          description: Wakeup time updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SleepRecordWakeupResponse'
+        '201':
+          description: Sleep record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SleepRecordCreateResponse'
+        '401':
+          description: Unauthorized - user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity - validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitErrorResponse'
+
+components:
+  schemas:
+    SleepRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the sleep record
+          example: 1
+        user_id:
+          type: integer
+          description: ID of the user this sleep record belongs to
+          example: 2
+        bed_time:
+          type: string
+          format: date-time
+          description: When the user went to bed (ISO 8601 format)
+          example: "2023-12-25T22:00:00Z"
+        wakeup_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the user woke up (ISO 8601 format), null if still sleeping
+          example: "2023-12-26T08:00:00Z"
+        duration_in_hours:
+          type: number
+          nullable: true
+          description: Duration of sleep in hours, null if still sleeping
+          example: 10.0
+        sleeping:
+          type: boolean
+          description: Whether the user is currently sleeping (wakeup_time is null)
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: When the record was created (ISO 8601 format)
+          example: "2023-12-25T22:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the record was last updated (ISO 8601 format)
+          example: "2023-12-26T08:00:00Z"
+      required:
+        - id
+        - user_id
+        - bed_time
+        - sleeping
+        - created_at
+        - updated_at
+
+    SleepRecordCreateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Sleep record created successfully"
+        sleep_record:
+          $ref: '#/components/schemas/SleepRecord'
+      required:
+        - message
+        - sleep_record
+
+    SleepRecordWakeupResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Wakeup time updated successfully"
+        sleep_record:
+          $ref: '#/components/schemas/SleepRecord'
+      required:
+        - message
+        - sleep_record
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "User not found"
+        message:
+          type: string
+          description: Detailed error message
+          example: "Please provide a valid user_id parameter"
+      required:
+        - error
+        - message
+
+    RateLimitErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Request Throttled"
+      required:
+        - error
+
+tags:
+  - name: Sleep Records
+    description: Operations related to sleep tracking
