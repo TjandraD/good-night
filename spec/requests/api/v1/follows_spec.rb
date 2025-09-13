@@ -284,4 +284,265 @@ RSpec.describe 'Api::V1::Follows', type: :request do
       end
     end
   end
+
+  describe 'GET /api/v1/follows/sleep_records' do
+    let(:current_user) { create(:user, name: 'CurrentUser') }
+    let(:user1) { create(:user, name: 'User1') }
+    let(:user2) { create(:user, name: 'User2') }
+    let(:user3) { create(:user, name: 'User3') }
+
+    context 'when user_id is not provided' do
+      it 'returns 401 unauthorized' do
+        get '/api/v1/follows/sleep_records', headers: headers
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)).to eq({
+          'error' => 'User not found',
+          'message' => 'Please provide a valid user_id parameter'
+        })
+      end
+    end
+
+    context 'when user does not exist' do
+      it 'returns 401 unauthorized' do
+        get '/api/v1/follows/sleep_records', params: { user_id: 999999 }, headers: headers
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)).to eq({
+          'error' => 'User not found',
+          'message' => 'Please provide a valid user_id parameter'
+        })
+      end
+    end
+
+    context 'when user exists but follows no one' do
+      it 'returns empty sleep records with correct pagination' do
+        get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body).to eq({
+          'message' => 'No sleep records found',
+          'sleep_records' => [],
+          'pagination' => {
+            'current_page' => 1,
+            'per_page' => 25,
+            'total_pages' => 0,
+            'total_count' => 0
+          }
+        })
+      end
+    end
+
+    context 'when user follows others with sleep records' do
+      let!(:follow1) { create(:follow, follower: current_user, followed: user1) }
+      let!(:follow2) { create(:follow, follower: current_user, followed: user2) }
+      
+      let!(:sleep_record1) do
+        create(:sleep_record, 
+               user: user1, 
+               bed_time: 3.days.ago, 
+               wakeup_time: 3.days.ago + 8.hours)
+      end
+      
+      let!(:sleep_record2) do
+        create(:sleep_record, 
+               user: user2, 
+               bed_time: 2.days.ago, 
+               wakeup_time: 2.days.ago + 7.hours)
+      end
+      
+      let!(:sleep_record3) do
+        create(:sleep_record, 
+               user: user1, 
+               bed_time: 1.day.ago, 
+               wakeup_time: 1.day.ago + 9.hours)
+      end
+      
+      # User3 not followed by current_user
+      let!(:sleep_record_unfollowed) do
+        create(:sleep_record, 
+               user: user3, 
+               bed_time: 4.days.ago, 
+               wakeup_time: 4.days.ago + 6.hours)
+      end
+
+      it 'returns sleep records from followed users ordered by bed_time desc' do
+        get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body['message']).to eq('Sleep records retrieved successfully')
+        expect(response_body['sleep_records'].length).to eq(3)
+
+        # Check ordering (most recent bed_time first)
+        sleep_records = response_body['sleep_records']
+        expect(sleep_records[0]['id']).to eq(sleep_record3.id) # 1 day ago
+        expect(sleep_records[1]['id']).to eq(sleep_record2.id) # 2 days ago
+        expect(sleep_records[2]['id']).to eq(sleep_record1.id) # 3 days ago
+
+        # Verify only followed users' records are included
+        user_ids = sleep_records.map { |sr| sr['user_id'] }
+        expect(user_ids).to include(user1.id, user2.id)
+        expect(user_ids).not_to include(user3.id)
+
+        # Check first record structure
+        first_record = sleep_records[0]
+        expect(first_record).to include(
+          'id' => sleep_record3.id,
+          'user_id' => user1.id,
+          'user_name' => 'User1',
+          'bed_time' => sleep_record3.bed_time.iso8601,
+          'wakeup_time' => sleep_record3.wakeup_time.iso8601,
+          'sleeping' => false
+        )
+        expect(first_record['duration_in_hours']).to be_within(0.01).of(9.0)
+        expect(first_record['created_at']).to be_present
+        expect(first_record['updated_at']).to be_present
+
+        # Check pagination
+        expect(response_body['pagination']).to eq({
+          'current_page' => 1,
+          'per_page' => 25,
+          'total_pages' => 1,
+          'total_count' => 3
+        })
+      end
+
+      it 'handles pagination correctly' do
+        get '/api/v1/follows/sleep_records', 
+            params: { user_id: current_user.id, page: 2, limit: 2 }, 
+            headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body['sleep_records'].length).to eq(1)
+        expect(response_body['sleep_records'][0]['id']).to eq(sleep_record1.id)
+
+        expect(response_body['pagination']).to eq({
+          'current_page' => 2,
+          'per_page' => 2,
+          'total_pages' => 2,
+          'total_count' => 3
+        })
+      end
+
+      it 'handles sleeping records (no wakeup_time) correctly' do
+        # Create a sleeping record
+        sleeping_record = create(:sleep_record, 
+                                user: user1, 
+                                bed_time: Time.current, 
+                                wakeup_time: nil)
+
+        get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body['sleep_records'].length).to eq(4)
+
+        # The sleeping record should be first (most recent bed_time)
+        first_record = response_body['sleep_records'][0]
+        expect(first_record['id']).to eq(sleeping_record.id)
+        expect(first_record['sleeping']).to eq(true)
+        expect(first_record['wakeup_time']).to be_nil
+        expect(first_record['duration_in_hours']).to be_nil
+      end
+
+      it 'caps limit at 100 and uses defaults for invalid parameters' do
+        get '/api/v1/follows/sleep_records', 
+            params: { user_id: current_user.id, page: -1, limit: 150 }, 
+            headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body['pagination']).to include(
+          'current_page' => 1,  # Default to 1 for invalid page
+          'per_page' => 100     # Capped at 100
+        )
+      end
+
+      it 'handles edge case when followed user has no sleep records' do
+        # Create a user with no sleep records
+        user_no_sleep = create(:user, name: 'UserNoSleep')
+        create(:follow, follower: current_user, followed: user_no_sleep)
+
+        get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        # Should still return the 3 existing sleep records
+        expect(response_body['sleep_records'].length).to eq(3)
+        expect(response_body['pagination']['total_count']).to eq(3)
+      end
+    end
+
+    context 'integration test with complete follow and sleep tracking flow' do
+      it 'handles the complete flow from following to viewing sleep records' do
+        # Step 1: Follow user1 and user2
+        post '/api/v1/follows', 
+             params: { user_id: current_user.id, followed_id: user1.id }.to_json, 
+             headers: headers
+        expect(response).to have_http_status(:created)
+
+        post '/api/v1/follows', 
+             params: { user_id: current_user.id, followed_id: user2.id }.to_json, 
+             headers: headers
+        expect(response).to have_http_status(:created)
+
+        # Step 2: Create sleep records for followed users
+        sleep_record1 = create(:sleep_record, 
+                              user: user1, 
+                              bed_time: 1.day.ago, 
+                              wakeup_time: 1.day.ago + 8.hours)
+        
+        sleep_record2 = create(:sleep_record, 
+                              user: user2, 
+                              bed_time: 2.hours.ago, 
+                              wakeup_time: nil) # Currently sleeping
+
+        # Create a sleep record for non-followed user (should not appear)
+        create(:sleep_record, 
+               user: user3, 
+               bed_time: 3.hours.ago, 
+               wakeup_time: 2.hours.ago)
+
+        # Step 3: Fetch sleep records
+        get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body['sleep_records'].length).to eq(2)
+        
+        # Most recent should be first (user2's sleeping record)
+        expect(response_body['sleep_records'][0]['user_id']).to eq(user2.id)
+        expect(response_body['sleep_records'][0]['sleeping']).to eq(true)
+        
+        expect(response_body['sleep_records'][1]['user_id']).to eq(user1.id)
+        expect(response_body['sleep_records'][1]['sleeping']).to eq(false)
+
+        # Step 4: Unfollow user2
+        delete '/api/v1/follows', 
+               params: { user_id: current_user.id, followed_id: user2.id }.to_json, 
+               headers: headers
+        expect(response).to have_http_status(:ok)
+
+        # Step 5: Fetch sleep records again (should only show user1's records)
+        get '/api/v1/follows/sleep_records', params: { user_id: current_user.id }, headers: headers
+
+        expect(response).to have_http_status(:ok)
+        response_body = JSON.parse(response.body)
+
+        expect(response_body['sleep_records'].length).to eq(1)
+        expect(response_body['sleep_records'][0]['user_id']).to eq(user1.id)
+        expect(response_body['pagination']['total_count']).to eq(1)
+      end
+    end
+  end
 end

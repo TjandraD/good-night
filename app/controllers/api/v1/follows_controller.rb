@@ -62,6 +62,55 @@ class Api::V1::FollowsController < Api::BaseController
     end
   end
 
+  def sleep_records
+    # Get pagination parameters
+    page = [params[:page].to_i, 1].max
+    limit = (params[:limit].present? && params[:limit].to_i > 0) ? params[:limit].to_i : 25
+    limit = [limit, 100].min # Cap limit at 100
+    offset = (page - 1) * limit
+
+    # Get IDs of users that current user follows
+    followed_user_ids = current_user.following.pluck(:id)
+
+    if followed_user_ids.empty?
+      render json: {
+        message: "No sleep records found",
+        sleep_records: [],
+        pagination: {
+          current_page: page,
+          per_page: limit,
+          total_pages: 0,
+          total_count: 0
+        }
+      }, status: :ok
+      return
+    end
+
+    # Get sleep records from followed users, ordered by bed_time desc (most recent first)
+    sleep_records_query = SleepRecord.joins(:user)
+                                    .where(user_id: followed_user_ids)
+                                    .includes(:user)
+                                    .order(bed_time: :desc)
+
+    # Get total count for pagination
+    total_count = sleep_records_query.count
+    total_pages = (total_count.to_f / limit).ceil
+
+    # Apply pagination
+    sleep_records = sleep_records_query.limit(limit).offset(offset)
+
+    render json: {
+      message: "Sleep records retrieved successfully",
+      sleep_records: sleep_records.map { |record| sleep_record_with_user_json(record) },
+      pagination: {
+        current_page: page,
+        per_page: limit,
+        total_pages: total_pages,
+        total_count: total_count
+      }
+    }, status: :ok
+  end
+
   private
 
   def follow_json(follow)
@@ -73,6 +122,20 @@ class Api::V1::FollowsController < Api::BaseController
       followed_name: follow.followed.name,
       created_at: follow.created_at.iso8601,
       updated_at: follow.updated_at.iso8601
+    }
+  end
+
+  def sleep_record_with_user_json(record)
+    {
+      id: record.id,
+      user_id: record.user_id,
+      user_name: record.user.name,
+      bed_time: record.bed_time&.iso8601,
+      wakeup_time: record.wakeup_time&.iso8601,
+      duration_in_hours: record.duration_in_hours,
+      sleeping: record.sleeping?,
+      created_at: record.created_at.iso8601,
+      updated_at: record.updated_at.iso8601
     }
   end
 end

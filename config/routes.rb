@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       post "sleep_records", to: "sleep_records#create"
       post "follows", to: "follows#create"
       delete "follows", to: "follows#destroy"
+      get "follows/sleep_records", to: "follows#sleep_records"
     end
   end
 
