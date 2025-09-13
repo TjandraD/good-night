@@ -6,10 +6,10 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
   let(:user) { create(:user) }
   let(:headers) { { 'CONTENT_TYPE' => 'application/json' } }
 
-  describe 'POST /api/v1/sleep_record' do
+  describe 'POST /api/v1/sleep_records' do
     context 'when user_id is not provided' do
       it 'returns 401 unauthorized' do
-        post '/api/v1/sleep_record', headers: headers
+        post '/api/v1/sleep_records', headers: headers
 
         expect(response).to have_http_status(:unauthorized)
         expect(JSON.parse(response.body)).to eq({
@@ -21,7 +21,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
 
     context 'when user does not exist' do
       it 'returns 401 unauthorized' do
-        post '/api/v1/sleep_record', params: { user_id: 999999 }.to_json, headers: headers
+        post '/api/v1/sleep_records', params: { user_id: 999999 }.to_json, headers: headers
 
         expect(response).to have_http_status(:unauthorized)
         expect(JSON.parse(response.body)).to eq({
@@ -38,7 +38,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
 
           travel_to(freeze_time) do
             expect {
-              post '/api/v1/sleep_record', params: { user_id: user.id }.to_json, headers: headers
+              post '/api/v1/sleep_records', params: { user_id: user.id }.to_json, headers: headers
             }.to change(SleepRecord, :count).by(1)
 
             expect(response).to have_http_status(:created)
@@ -66,7 +66,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
 
         it 'creates a new sleep record' do
           expect {
-            post '/api/v1/sleep_record', params: { user_id: user.id }.to_json, headers: headers
+            post '/api/v1/sleep_records', params: { user_id: user.id }.to_json, headers: headers
           }.to change(SleepRecord, :count).by(1)
 
           expect(response).to have_http_status(:created)
@@ -86,7 +86,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
 
           travel_to(freeze_time) do
             expect {
-              post '/api/v1/sleep_record', params: { user_id: user.id }.to_json, headers: headers
+              post '/api/v1/sleep_records', params: { user_id: user.id }.to_json, headers: headers
             }.not_to change(SleepRecord, :count)
 
             expect(response).to have_http_status(:ok)
@@ -112,7 +112,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
     context 'integration test with real flow' do
       it 'handles the complete sleep tracking flow' do
         # Step 1: Start sleep tracking
-        post '/api/v1/sleep_record', params: { user_id: user.id }.to_json, headers: headers
+        post '/api/v1/sleep_records', params: { user_id: user.id }.to_json, headers: headers
 
         expect(response).to have_http_status(:created)
         first_response = JSON.parse(response.body)
@@ -122,7 +122,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
         sleep_record_id = first_response['sleep_record']['id']
 
         # Step 2: End sleep tracking (same endpoint call)
-        post '/api/v1/sleep_record', params: { user_id: user.id }.to_json, headers: headers
+        post '/api/v1/sleep_records', params: { user_id: user.id }.to_json, headers: headers
 
         expect(response).to have_http_status(:ok)
         second_response = JSON.parse(response.body)
@@ -132,7 +132,7 @@ RSpec.describe 'Api::V1::SleepRecords', type: :request do
         expect(second_response['sleep_record']['duration_in_hours']).to be_present
 
         # Step 3: Start new sleep tracking (should create new record)
-        post '/api/v1/sleep_record', params: { user_id: user.id }.to_json, headers: headers
+        post '/api/v1/sleep_records', params: { user_id: user.id }.to_json, headers: headers
 
         expect(response).to have_http_status(:created)
         third_response = JSON.parse(response.body)
