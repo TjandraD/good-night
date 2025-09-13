@@ -10,7 +10,7 @@ class User < ApplicationRecord
   validates :name, presence: true, length: { maximum: 100 }
 
   def latest_sleep_record
-    sleep_records.order(created_at: :desc).first
+    sleep_records.order(id: :desc).first
   end
 
   def following?(other_user)
