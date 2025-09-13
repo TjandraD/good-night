@@ -7,7 +7,7 @@ servers:
   - url: http://localhost:3000
     description: Development server
 paths:
-  /api/v1/sleep_record:
+  /api/v1/sleep_records:
     post:
       summary: Create or update sleep record
       description: |
@@ -54,6 +54,69 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           description: Unprocessable Entity - validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitErrorResponse'
+
+  /api/v1/follows:
+    post:
+      summary: Follow a user
+      description: |
+        Creates a new follow relationship between the current user and another user.
+        
+        **Business Logic:**
+        - Users cannot follow themselves
+        - Users cannot follow the same user multiple times
+        - Both follower and followed users must exist
+      operationId: createFollow
+      tags:
+        - Follows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - followed_id
+              properties:
+                user_id:
+                  type: integer
+                  description: The ID of the user who wants to follow (follower)
+                  example: 1
+                followed_id:
+                  type: integer
+                  description: The ID of the user to be followed
+                  example: 2
+      responses:
+        '201':
+          description: Successfully followed user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowCreateResponse'
+        '401':
+          description: Unauthorized - user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - followed user does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity - validation failed (duplicate follow, self-follow)
           content:
             application/json:
               schema:
@@ -164,6 +227,62 @@ components:
       required:
         - error
 
+    Follow:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the follow relationship
+          example: 1
+        follower_id:
+          type: integer
+          description: ID of the user who is following
+          example: 1
+        followed_id:
+          type: integer
+          description: ID of the user being followed
+          example: 2
+        follower_name:
+          type: string
+          description: Name of the user who is following
+          example: "John Doe"
+        followed_name:
+          type: string
+          description: Name of the user being followed
+          example: "Jane Smith"
+        created_at:
+          type: string
+          format: date-time
+          description: When the follow relationship was created (ISO 8601 format)
+          example: "2023-12-25T22:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the follow relationship was last updated (ISO 8601 format)
+          example: "2023-12-25T22:00:00Z"
+      required:
+        - id
+        - follower_id
+        - followed_id
+        - follower_name
+        - followed_name
+        - created_at
+        - updated_at
+
+    FollowCreateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Successfully followed user"
+        follow:
+          $ref: '#/components/schemas/Follow'
+      required:
+        - message
+        - follow
+
 tags:
   - name: Sleep Records
     description: Operations related to sleep tracking
+  - name: Follows
+    description: Operations related to user follow relationships
