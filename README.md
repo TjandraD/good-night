@@ -85,19 +85,15 @@ bin/rails db:seed
 This project includes a comprehensive database seeding system that can populate the database with millions of realistic records using the Faker gem. The seeding system is optimized for performance and can handle large datasets efficiently.
 
 **Environment-Specific Seeding:**
-- `development`: 10K users, 50K sleep records, 20K follows (~7 seconds)
+- `development`: [DEFAULT] 10K users, 50K sleep records, 20K follows (~7 seconds)
 - `production`: 100 users, 500 sleep records, 200 follows (minimal data)
 - `test`: 5 users, 10 sleep records, 4 follows (for testing)
-- `default`: 1M users, 5M sleep records, 2M follows (massive dataset for performance testing)
 
 ```bash
 # Environment-specific seeding
 RAILS_ENV=development rails db:seed  # Quick setup for development
 RAILS_ENV=production rails db:seed   # Minimal data for production
 RAILS_ENV=test rails db:seed         # Test data only
-
-# Massive dataset (for performance testing)
-rails db:seed  # 1M+ records - takes ~20 minutes
 ```
 
 **Verify seeded data:**
@@ -155,6 +151,9 @@ A Postman collection is provided in the `docs` folder to test the API endpoints.
 This project uses RSpec for testing. Run the complete test suite:
 
 ```bash
+# Initiate test database
+RAILS_ENV=test bin/rails db:create db:schema:load
+
 # Run all tests
 bundle exec rspec
 
@@ -181,15 +180,6 @@ bundle exec brakeman
 
 # Run all quality checks
 bundle exec rubocop && bundle exec brakeman
-```
-
-### Test Database
-
-The test database is automatically managed by RSpec, but you can manually reset it:
-
-```bash
-# Reset test database
-RAILS_ENV=test bin/rails db:reset
 ```
 
 ## 📁 Database Schema
